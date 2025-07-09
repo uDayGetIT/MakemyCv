@@ -32,6 +32,7 @@ function App() {
     try {
       const text = await extractTextFromPDF(pdfFile);
       const prompt = buildPrompt(text, jd);
+      console.log('API KEY:', API_KEY); // TEMPORARY DEBUG - Remove before deploy
 
       const response = await fetch(API_URL, {
         method: 'POST',
