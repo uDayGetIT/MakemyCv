@@ -12,31 +12,28 @@ function App() {
   const [resumeData, setResumeData] = useState(null);
   const [editing, setEditing] = useState(false);
   const [jd, setJd] = useState('');
-  const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  const handleFileChange = (e) => {
-    setPdfFile(e.target.files[0]);
-  };
-
-  const handlePreview = async () => {
+  const handleFileUpload = async (e) => {
     setError('');
-    if (!pdfFile || !jd.trim()) {
-      setError('Please provide both the resume (PDF) and the job description.');
+    setShowPreview(false);
+    const file = e.target.files[0];
+    if (!file || !jd.trim()) {
+      setError('Please provide both PDF and Job Description.');
       return;
     }
 
     setLoading(true);
     try {
-      const text = await extractTextFromPDF(pdfFile);
+      const text = await extractTextFromPDF(file);
       const prompt = buildPrompt(text, jd);
 
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
+          'Authorization': `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -48,7 +45,11 @@ function App() {
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
 
-      const json = JSON.parse(content);
+      // 🛠️ Safely extract JSON only from LLM output
+      const jsonText = content?.match(/\{[\s\S]*\}/)?.[0];
+      if (!jsonText) throw new Error('No JSON found in response');
+
+      const json = JSON.parse(jsonText);
       setResumeData(json);
       setShowPreview(true);
     } catch (err) {
@@ -59,7 +60,7 @@ function App() {
     }
   };
 
-  const handleDownload = () => {
+  const downloadAsPDF = () => {
     window.print();
   };
 
@@ -75,28 +76,19 @@ function App() {
             value={jd}
             onChange={(e) => setJd(e.target.value)}
           />
-          <input type="file" accept="application/pdf" onChange={handleFileChange} />
-          <button onClick={handlePreview} disabled={loading}>
-            {loading ? 'Generating...' : 'Preview Resume'}
-          </button>
+          <input type="file" accept="application/pdf" onChange={handleFileUpload} />
           {error && <div className="error">{error}</div>}
+          {loading && <p>Generating tailored resume…</p>}
         </div>
       )}
 
-      {resumeData && showPreview && !editing && (
+      {showPreview && resumeData && !editing && (
         <>
           <ResumeTemplate data={resumeData} />
           <div className="controls">
             <button onClick={() => setEditing(true)}>✏️ Edit</button>
-            <button onClick={handleDownload}>📄 Download PDF</button>
-            <button
-              onClick={() => {
-                setResumeData(null);
-                setShowPreview(false);
-              }}
-            >
-              🔁 Start Over
-            </button>
+            <button onClick={downloadAsPDF}>📄 Download PDF</button>
+            <button onClick={() => { setResumeData(null); setShowPreview(false); }}>🔁 Start Over</button>
           </div>
         </>
       )}
