@@ -1,47 +1,44 @@
-import { PDFDocument } from 'pdf-lib';
+export const buildPrompt = (resumeText, jd) => {
+  return `
+Your task is to tailor the following resume text to strongly match the given job description.
 
-export async function extractTextFromPDF(file) {
-  const buffer = await file.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(buffer);
-  const pages = pdfDoc.getPages();
-  return pages.map((page) => page.getTextContent()).join('\n');
-}
-
-export async function callGroqAPI(resumeText, jdText) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  const prompt = `You are an expert resume writer. Based on the user's original resume and the following job description, tailor their resume to match the job closely. Return only a JSON object like this:
+Respond ONLY in valid JSON (no natural text or preambles), matching this format:
 {
   "name": "Full Name",
-  "contact": "email, phone, links",
-  "summary": "...",
-  "skills": [...],
-  "experience": [...],
-  "education": [...],
-  "projects": [...]
+  "email": "example@email.com",
+  "phone": "+91-XXXXX",
+  "location": "City, Country",
+  "linkedin": "https://linkedin.com/in/...",
+  "github": "https://github.com/...",
+  "skills": ["Skill1", "Skill2", ...],
+  "education": [
+    {
+      "degree": "B.Tech in XYZ",
+      "institution": "University Name",
+      "duration": "2019 – 2023"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "duration": "Jan 2020 – Present",
+      "bullets": ["Accomplishment 1", "Accomplishment 2"]
+    }
+  ],
+  "projects": [
+    {
+      "title": "Project Name",
+      "tech": "React, Node.js",
+      "bullets": ["Description point 1", "point 2"]
+    }
+  ]
 }
-Make sure the result has strong keyword match and is formatted cleanly.
-Original Resume:\n${resumeText}
-Job Description:\n${jdText}`;
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.4
-    })
-  });
+Resume text:
+${resumeText}
 
-  const data = await response.json();
-  try {
-    const text = data.choices?.[0]?.message?.content || '{}';
-    return JSON.parse(text);
-  } catch (err) {
-    console.error("Failed to parse JSON:", err, data);
-    throw new Error("Invalid AI response format.");
-  }
-}
+Job Description:
+${jd}
+  `;
+};
