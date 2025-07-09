@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f6f7fa;
+  color: #333;
+}
+
+.app-container {
+  padding: 2rem;
+  max-width: 960px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.upload-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ddd;
+}
+
+.upload-section textarea {
+  width: 100%;
+  font-size: 0.95rem;
+  padding: 10px;
+  margin-bottom: 1rem;
+  resize: vertical;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.upload-section input[type="file"] {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: crimson;
+  font-weight: bold;
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  border: none;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background-color: #111;
+}
+
+.editor textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  min-height: 500px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+}
