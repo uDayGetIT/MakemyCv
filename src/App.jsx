@@ -12,26 +12,31 @@ function App() {
   const [resumeData, setResumeData] = useState(null);
   const [editing, setEditing] = useState(false);
   const [jd, setJd] = useState('');
+  const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const handleFileUpload = async (e) => {
+  const handleFileChange = (e) => {
+    setPdfFile(e.target.files[0]);
+  };
+
+  const handlePreview = async () => {
     setError('');
-    const file = e.target.files[0];
-    if (!file || !jd.trim()) {
-      setError('Please provide both PDF and Job Description.');
+    if (!pdfFile || !jd.trim()) {
+      setError('Please provide both the resume (PDF) and the job description.');
       return;
     }
 
     setLoading(true);
     try {
-      const text = await extractTextFromPDF(file);
+      const text = await extractTextFromPDF(pdfFile);
       const prompt = buildPrompt(text, jd);
 
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -45,6 +50,7 @@ function App() {
 
       const json = JSON.parse(content);
       setResumeData(json);
+      setShowPreview(true);
     } catch (err) {
       console.error(err);
       setError('Something went wrong while tailoring your resume.');
@@ -53,7 +59,7 @@ function App() {
     }
   };
 
-  const downloadAsPDF = () => {
+  const handleDownload = () => {
     window.print();
   };
 
@@ -69,19 +75,28 @@ function App() {
             value={jd}
             onChange={(e) => setJd(e.target.value)}
           />
-          <input type="file" accept="application/pdf" onChange={handleFileUpload} />
+          <input type="file" accept="application/pdf" onChange={handleFileChange} />
+          <button onClick={handlePreview} disabled={loading}>
+            {loading ? 'Generating...' : 'Preview Resume'}
+          </button>
           {error && <div className="error">{error}</div>}
-          {loading && <p>Generating tailored resume…</p>}
         </div>
       )}
 
-      {resumeData && !editing && (
+      {resumeData && showPreview && !editing && (
         <>
           <ResumeTemplate data={resumeData} />
           <div className="controls">
             <button onClick={() => setEditing(true)}>✏️ Edit</button>
-            <button onClick={downloadAsPDF}>📄 Download PDF</button>
-            <button onClick={() => setResumeData(null)}>🔁 Start Over</button>
+            <button onClick={handleDownload}>📄 Download PDF</button>
+            <button
+              onClick={() => {
+                setResumeData(null);
+                setShowPreview(false);
+              }}
+            >
+              🔁 Start Over
+            </button>
           </div>
         </>
       )}
