@@ -3,7 +3,7 @@ import {
   Upload, FileText, Sparkles, Download, Eye, Edit3, Brain, Target, Zap, CheckCircle, ArrowRight
 } from "lucide-react";
 
-// Helper: Extract basic info from CV text
+// Extract basic info from CV text
 function extractBasicInfo(cvText) {
   const lines = cvText.split('\n').map(l => l.trim()).filter(Boolean);
   return {
@@ -12,9 +12,8 @@ function extractBasicInfo(cvText) {
   };
 }
 
-// Helper: Parse ATS-style sections from AI output
+// Parse ATS-style sections from AI output
 function parseSections(content) {
-  // Expecting: **SECTION**\ncontent\n\n**SECTION2**\ncontent...
   const sections = {};
   const lines = content.split("\n");
   let currentSection = "";
@@ -36,7 +35,7 @@ function parseSections(content) {
   return sections;
 }
 
-// Helper: Download as text
+// Download as text
 const downloadCV = (optimizedCV) => {
   const element = document.createElement("a");
   const file = new Blob([optimizedCV], { type: "text/plain" });
@@ -47,7 +46,7 @@ const downloadCV = (optimizedCV) => {
   document.body.removeChild(element);
 };
 
-// Helper: Download as HTML (Jake Resume style)
+// Download as HTML (Jake Resume style)
 const downloadHTML = (optimizedCV, cvText) => {
   const { name, contact } = extractBasicInfo(cvText);
   const sections = parseSections(optimizedCV);
@@ -94,17 +93,14 @@ const downloadHTML = (optimizedCV, cvText) => {
   document.body.removeChild(element);
 };
 
-// Helper: Format section content for HTML
 function formatSectionHTML(section, content) {
   if (section.includes("experience") || section === "projects") {
-    // Bullet points
     const items = content.split('\n').filter(l => l.trim());
     return `<ul>${items.map(item => `<li>${item.replace(/^•\s?/, "")}</li>`).join("")}</ul>`;
   }
   return `<div>${content.replace(/\n/g, "<br>")}</div>`;
 }
 
-// Helper: Format section content for React preview
 function formatSectionPreview(section, content) {
   if (section.includes("experience") || section === "projects") {
     const items = content.split('\n').filter(l => l.trim());
@@ -128,7 +124,7 @@ const CVEditorOptimizer = () => {
   const [editedSections, setEditedSections] = useState({});
   const fileInputRef = useRef(null);
 
-  // PDF/TXT Upload Handler (using pdf.js from window)
+  // PDF/TXT Upload Handler (waits for PDF.js to be available)
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -140,15 +136,21 @@ const CVEditorOptimizer = () => {
     } else if (file.type === "application/pdf") {
       const reader = new FileReader();
       reader.onload = async (e) => {
+        const waitForPDFJS = () =>
+          new Promise((resolve, reject) => {
+            let tries = 0;
+            function check() {
+              if (window.pdfjsLib) return resolve(window.pdfjsLib);
+              if (++tries > 30) return reject(new Error("PDF.js not loaded"));
+              setTimeout(check, 100);
+            }
+            check();
+          });
         try {
-          const pdfjsLib = window["pdfjs-dist/build/pdf"];
-          if (!pdfjsLib) {
-            setCvText("PDF.js not loaded. Please refresh the page.");
-            return;
-          }
+          const pdfjsLib = await waitForPDFJS();
           pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
-          const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) });
+          const loadingTask = pdfjsLib.getDocument({  new Uint8Array(e.target.result) });
           const pdf = await loadingTask.promise;
           let text = "";
           for (let i = 1; i <= pdf.numPages; i++) {
@@ -177,7 +179,6 @@ const CVEditorOptimizer = () => {
     }
     setIsOptimizing(true);
     try {
-      // Strong prompt for ATS-friendly, Jake Resume style, and JD matching
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -241,7 +242,6 @@ const CVEditorOptimizer = () => {
     setEditMode(false);
   };
 
-  // Editable section rendering
   const renderEditableSection = (sectionKey, sectionContent) => {
     const currentContent = editedSections[sectionKey] || sectionContent;
     if (editMode) {
@@ -262,7 +262,6 @@ const CVEditorOptimizer = () => {
     return formatSectionPreview(sectionKey, currentContent);
   };
 
-  // Jake Resume preview
   const renderJakeTemplate = () => {
     const { name, contact } = extractBasicInfo(cvText);
     const sections = parseSections(optimizedCV);
@@ -388,6 +387,10 @@ const CVEditorOptimizer = () => {
                         <p className="text-sm text-green-600 mt-1">
                           Ready for optimization
                         </p>
+                        <div className="mt-2 text-xs text-gray-700 bg-gray-50 p-2 rounded">
+                          <strong>Extracted CV Preview:</strong>
+                          <pre style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}>{cvText}</pre>
+                        </div>
                       </div>
                     )}
                   </div>
