@@ -1,38 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   Upload, FileText, Sparkles, Download, Eye, Edit3, Brain, Target, Zap, CheckCircle, ArrowRight
-} from 'lucide-react';
+} from "lucide-react";
 
 // Helper: Parse Optimized CV
 const parseOptimizedCV = (content) => {
   const sections = {};
-  const lines = content.split('\n');
-  let currentSection = '';
+  const lines = content.split("\n");
+  let currentSection = "";
   let currentContent = [];
 
   for (let line of lines) {
-    if (line.startsWith('**') && line.endsWith('**')) {
+    if (line.startsWith("**") && line.endsWith("**")) {
       if (currentSection) {
-        sections[currentSection] = currentContent.join('\n').trim();
+        sections[currentSection] = currentContent.join("\n").trim();
       }
-      currentSection = line.replace(/\*\*/g, '').toLowerCase();
+      currentSection = line.replace(/\*\*/g, "").toLowerCase();
       currentContent = [];
     } else if (line.trim()) {
       currentContent.push(line);
     }
   }
   if (currentSection) {
-    sections[currentSection] = currentContent.join('\n').trim();
+    sections[currentSection] = currentContent.join("\n").trim();
   }
   return sections;
 };
 
 // Helper: Download CV as text
 const downloadCV = (optimizedCV) => {
-  const element = document.createElement('a');
-  const file = new Blob([optimizedCV], { type: 'text/plain' });
+  const element = document.createElement("a");
+  const file = new Blob([optimizedCV], { type: "text/plain" });
   element.href = URL.createObjectURL(file);
-  element.download = 'optimized_cv.txt';
+  element.download = "optimized_cv.txt";
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
@@ -43,36 +43,40 @@ const generateHTMLTemplate = (optimizedCV) => {
   const sections = parseOptimizedCV(optimizedCV);
 
   const formatSectionContent = (sectionType, content) => {
-    if (sectionType.includes('experience')) {
-      const experiences = content.split('\n\n');
-      return experiences.map(exp => {
-        const lines = exp.split('\n');
-        const titleLine = lines[0];
-        const bullets = lines.slice(1).filter(line => line.startsWith('•'));
-        return `
-          <div class="experience-item">
-            <h3>${titleLine}</h3>
-            <ul>
-              ${bullets.map(bullet => `<li>${bullet.substring(2)}</li>`).join('')}
-            </ul>
-          </div>
-        `;
-      }).join('');
-    } else if (sectionType === 'projects') {
-      const projects = content.split('\n\n');
-      return projects.map(project => {
-        const lines = project.split('\n');
-        const title = lines[0];
-        const description = lines.slice(1).join('<br>');
-        return `
-          <div class="project-item">
-            <h4>${title}</h4>
-            <p>${description}</p>
-          </div>
-        `;
-      }).join('');
+    if (sectionType.includes("experience")) {
+      const experiences = content.split("\n\n");
+      return experiences
+        .map((exp) => {
+          const lines = exp.split("\n");
+          const titleLine = lines[0];
+          const bullets = lines.slice(1).filter((line) => line.startsWith("•"));
+          return `
+            <div class="experience-item">
+              <h3>${titleLine}</h3>
+              <ul>
+                ${bullets.map((bullet) => `<li>${bullet.substring(2)}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        })
+        .join("");
+    } else if (sectionType === "projects") {
+      const projects = content.split("\n\n");
+      return projects
+        .map((project) => {
+          const lines = project.split("\n");
+          const title = lines[0];
+          const description = lines.slice(1).join("<br>");
+          return `
+            <div class="project-item">
+              <h4>${title}</h4>
+              <p>${description}</p>
+            </div>
+          `;
+        })
+        .join("");
     } else {
-      return `<p>${content.replace(/\n/g, '<br>')}</p>`;
+      return `<p>${content.replace(/\n/g, "<br>")}</p>`;
     }
   };
 
@@ -82,9 +86,8 @@ const generateHTMLTemplate = (optimizedCV) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional CV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
         .cv-container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
@@ -117,12 +120,16 @@ const generateHTMLTemplate = (optimizedCV) => {
             </div>
         </div>
         <div class="content">
-            ${Object.entries(sections).map(([key, content]) => `
+            ${Object.entries(sections)
+              .map(
+                ([key, content]) => `
                 <div class="section">
                     <h2>${key.toUpperCase()}</h2>
                     <div>${formatSectionContent(key, content)}</div>
                 </div>
-            `).join('')}
+            `
+              )
+              .join("")}
         </div>
     </div>
 </body>
@@ -131,9 +138,9 @@ const generateHTMLTemplate = (optimizedCV) => {
 
 // Helper: Download templated CV as HTML
 const downloadTemplatedCV = (optimizedCV, selectedTemplate) => {
-  const element = document.createElement('a');
+  const element = document.createElement("a");
   const htmlContent = generateHTMLTemplate(optimizedCV);
-  element.href = URL.createObjectURL(new Blob([htmlContent], { type: 'text/html' }));
+  element.href = URL.createObjectURL(new Blob([htmlContent], { type: "text/html" }));
   element.download = `cv_${selectedTemplate}_template.html`;
   document.body.appendChild(element);
   element.click();
@@ -142,14 +149,14 @@ const downloadTemplatedCV = (optimizedCV, selectedTemplate) => {
 
 // Helper: Render section content (React JSX)
 const renderSectionContent = (sectionType, content) => {
-  if (sectionType.includes('experience')) {
-    const experiences = content.split('\n\n').filter(exp => exp.trim());
+  if (sectionType.includes("experience")) {
+    const experiences = content.split("\n\n").filter((exp) => exp.trim());
     return (
       <div className="space-y-6">
         {experiences.map((exp, index) => {
-          const lines = exp.split('\n');
+          const lines = exp.split("\n");
           const titleLine = lines[0];
-          const bullets = lines.slice(1).filter(line => line.startsWith('•'));
+          const bullets = lines.slice(1).filter((line) => line.startsWith("•"));
           return (
             <div key={index} className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-semibold text-lg text-gray-900 mb-3">{titleLine}</h3>
@@ -166,14 +173,14 @@ const renderSectionContent = (sectionType, content) => {
         })}
       </div>
     );
-  } else if (sectionType === 'projects') {
-    const projects = content.split('\n\n').filter(proj => proj.trim());
+  } else if (sectionType === "projects") {
+    const projects = content.split("\n\n").filter((proj) => proj.trim());
     return (
       <div className="space-y-4">
         {projects.map((project, index) => {
-          const lines = project.split('\n');
+          const lines = project.split("\n");
           const title = lines[0];
-          const description = lines.slice(1).join(' ');
+          const description = lines.slice(1).join(" ");
           return (
             <div key={index} className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-semibold text-blue-600 mb-2">{title}</h4>
@@ -183,8 +190,8 @@ const renderSectionContent = (sectionType, content) => {
         })}
       </div>
     );
-  } else if (sectionType === 'education') {
-    const educationItems = content.split('\n').filter(item => item.trim());
+  } else if (sectionType === "education") {
+    const educationItems = content.split("\n").filter((item) => item.trim());
     return (
       <div className="space-y-3">
         {educationItems.map((item, index) => (
@@ -204,12 +211,12 @@ const renderSectionContent = (sectionType, content) => {
 };
 
 const CVEditorOptimizer = () => {
-  const [activeTab, setActiveTab] = useState('upload');
-  const [cvText, setCvText] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [optimizedCV, setOptimizedCV] = useState('');
+  const [activeTab, setActiveTab] = useState("upload");
+  const [cvText, setCvText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [optimizedCV, setOptimizedCV] = useState("");
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState('jake');
+  const [selectedTemplate, setSelectedTemplate] = useState("jake");
   const [showPreview, setShowPreview] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editedSections, setEditedSections] = useState({});
@@ -217,61 +224,93 @@ const CVEditorOptimizer = () => {
 
   const templates = {
     jake: {
-      name: 'Jake Resume',
-      description: 'Clean, modern ATS-friendly design',
-      color: 'bg-blue-500'
+      name: "Jake Resume",
+      description: "Clean, modern ATS-friendly design",
+      color: "bg-blue-500",
     },
     minimal: {
-      name: 'Minimal Pro',
-      description: 'Simple, elegant, professional',
-      color: 'bg-gray-600'
+      name: "Minimal Pro",
+      description: "Simple, elegant, professional",
+      color: "bg-gray-600",
     },
     creative: {
-      name: 'Creative Edge',
-      description: 'Bold, modern, eye-catching',
-      color: 'bg-purple-500'
+      name: "Creative Edge",
+      description: "Bold, modern, eye-catching",
+      color: "bg-purple-500",
     },
     executive: {
-      name: 'Executive',
-      description: 'Sophisticated, corporate style',
-      color: 'bg-emerald-500'
-    }
+      name: "Executive",
+      description: "Sophisticated, corporate style",
+      color: "bg-emerald-500",
+    },
   };
 
-  // File upload handler
+  // PDF/TXT Upload Handler (using pdf.js from window)
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    if (file.type === "text/plain") {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setCvText(e.target.result);
+      reader.onload = (e) => setCvText(e.target.result);
+      reader.readAsText(file);
+    } else if (file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          // Use PDF.js from window
+          const pdfjsLib = window["pdfjs-dist/build/pdf"];
+          if (!pdfjsLib) {
+            setCvText("PDF.js not loaded. Please refresh the page.");
+            return;
+          }
+          pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
+          const loadingTask = pdfjsLib.getDocument({  new Uint8Array(e.target.result) });
+          const pdf = await loadingTask.promise;
+          let text = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((item) => item.str).join(" ") + "\n";
+          }
+          setCvText(text);
+        } catch (err) {
+          setCvText("Failed to extract text from PDF. Please try another file.");
+        }
       };
-      if (file.type === 'text/plain') {
-        reader.readAsText(file);
-      } else {
-        // For PDF/DOCX, simulate extraction
-        reader.onload = (e) => {
-          setCvText("Sample CV content from uploaded file. In a real implementation, you'd use a PDF/DOCX parser library.");
-        };
-        reader.readAsDataURL(file);
-      }
+      reader.readAsArrayBuffer(file);
+    } else {
+      setCvText(
+        "Currently, only .txt and .pdf files are supported for text extraction in this version. Please convert your CV to .txt or .pdf format and upload again."
+      );
     }
   };
 
   // Demo optimization fallback
   const generateDemoOptimization = () => {
     return `**PROFILE**
-Results-driven professional with expertise in ${jobDescription.includes('software') ? 'software development' : 'project management'} and proven track record of delivering high-impact solutions. Skilled in cross-functional collaboration, process optimization, and driving business growth through innovative approaches.
+Results-driven professional with expertise in ${
+      jobDescription.includes("software") ? "software development" : "project management"
+    } and proven track record of delivering high-impact solutions. Skilled in cross-functional collaboration, process optimization, and driving business growth through innovative approaches.
 
 **EXPERIENCE**
-Senior ${jobDescription.includes('software') ? 'Software Developer' : 'Project Manager'} | TechCorp Solutions | 2022-Present
+Senior ${
+      jobDescription.includes("software") ? "Software Developer" : "Project Manager"
+    } | TechCorp Solutions | 2022-Present
 • Led development of scalable applications serving 10,000+ users, improving system performance by 40%
 • Collaborated with cross-functional teams to deliver projects 20% ahead of schedule
 • Implemented best practices and mentored junior team members, increasing team productivity by 25%
-• Specialized in ${jobDescription.includes('React') ? 'React.js and modern frontend technologies' : 'agile methodologies and stakeholder management'}
+• Specialized in ${
+      jobDescription.includes("React")
+        ? "React.js and modern frontend technologies"
+        : "agile methodologies and stakeholder management"
+    }
 
 **EXPERIENCE 2**
-${jobDescription.includes('software') ? 'Full Stack Developer' : 'Assistant Project Manager'} | InnovateTech | 2020-2022
+${
+  jobDescription.includes("software") ? "Full Stack Developer" : "Assistant Project Manager"
+} | InnovateTech | 2020-2022
 • Developed and maintained multiple client-facing applications with 99.9% uptime
 • Optimized database queries reducing load times by 35%
 • Participated in code reviews and maintained high coding standards
@@ -292,46 +331,47 @@ E-commerce Platform Optimization
   // Optimize CV using API (or fallback)
   const optimizeCV = async () => {
     if (!cvText || !jobDescription) {
-      alert('Please provide both CV content and job description');
+      alert("Please provide both CV content and job description");
       return;
     }
     setIsOptimizing(true);
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer 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`
+          "Content-Type": "application/json",
+          Authorization: `Bearer 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`,
         },
         body: JSON.stringify({
-          model: 'llama3-8b-8192',
+          model: "llama3-8b-8192",
           messages: [
             {
-              role: 'system',
-              content: 'You are a professional CV optimizer. Analyze the provided CV and job description, then rewrite the CV to better match the job requirements. Format the output with clear sections: Profile, Experience, Experience 2 (if applicable), Education, Projects. Make the experiences sound relevant to the job role while staying truthful to the original content.'
+              role: "system",
+              content:
+                "You are a professional CV optimizer. Analyze the provided CV and job description, then rewrite the CV to better match the job requirements. Format the output with clear sections: Profile, Experience, Experience 2 (if applicable), Education, Projects. Make the experiences sound relevant to the job role while staying truthful to the original content.",
             },
             {
-              role: 'user',
-              content: `CV Content: ${cvText}\n\nJob Description: ${jobDescription}\n\nPlease optimize this CV for the job role, restructuring and rewording to highlight relevant skills and experiences.`
-            }
+              role: "user",
+              content: `CV Content: ${cvText}\n\nJob Description: ${jobDescription}\n\nPlease optimize this CV for the job role, restructuring and rewording to highlight relevant skills and experiences.`,
+            },
           ],
           temperature: 0.7,
-          max_tokens: 2000
-        })
+          max_tokens: 2000,
+        }),
       });
       const data = await response.json();
       if (data.choices && data.choices[0]) {
         setOptimizedCV(data.choices[0].message.content);
-        setActiveTab('optimize');
+        setActiveTab("optimize");
       } else {
         const demoOptimization = generateDemoOptimization();
         setOptimizedCV(demoOptimization);
-        setActiveTab('optimize');
+        setActiveTab("optimize");
       }
     } catch (error) {
       const demoOptimization = generateDemoOptimization();
       setOptimizedCV(demoOptimization);
-      setActiveTab('optimize');
+      setActiveTab("optimize");
     } finally {
       setIsOptimizing(false);
     }
@@ -339,9 +379,9 @@ E-commerce Platform Optimization
 
   // Section editing
   const updateSection = (sectionKey, newContent) => {
-    setEditedSections(prev => ({
+    setEditedSections((prev) => ({
       ...prev,
-      [sectionKey]: newContent
+      [sectionKey]: newContent,
     }));
   };
 
@@ -350,7 +390,7 @@ E-commerce Platform Optimization
     const updatedSections = { ...sections, ...editedSections };
     const newOptimizedCV = Object.entries(updatedSections)
       .map(([key, content]) => `**${key.toUpperCase()}**\n${content}`)
-      .join('\n\n');
+      .join("\n\n");
     setOptimizedCV(newOptimizedCV);
     setEditedSections({});
     setEditMode(false);
@@ -452,17 +492,17 @@ E-commerce Platform Optimization
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl">
           {[
-            { id: 'upload', label: 'Upload CV', icon: Upload },
-            { id: 'optimize', label: 'Optimize', icon: Sparkles },
-            { id: 'templates', label: 'Templates', icon: FileText }
+            { id: "upload", label: "Upload CV", icon: Upload },
+            { id: "optimize", label: "Optimize", icon: Sparkles },
+            { id: "templates", label: "Templates", icon: FileText },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? "bg-white text-blue-600 shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <tab.icon className="w-5 h-5" />
@@ -474,14 +514,14 @@ E-commerce Platform Optimization
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {activeTab === 'upload' && (
+        {activeTab === "upload" && (
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Upload Your CV & Job Description
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Upload your current CV and paste the job description to get AI-powered optimization suggestions
+                Upload your current CV (.txt or .pdf) and paste the job description to get AI-powered optimization suggestions.
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
@@ -506,14 +546,14 @@ E-commerce Platform Optimization
                         Upload CV File
                       </p>
                       <p className="text-sm text-gray-600">
-                        Support for .txt, .pdf, .docx files
+                        Support for .txt and .pdf files
                       </p>
                     </div>
                     <input
                       type="file"
                       ref={fileInputRef}
                       onChange={handleFileUpload}
-                      accept=".txt,.pdf,.docx"
+                      accept=".txt,.pdf"
                       className="hidden"
                     />
                     {cvText && (
@@ -574,7 +614,7 @@ E-commerce Platform Optimization
           </div>
         )}
 
-        {activeTab === 'optimize' && (
+        {activeTab === "optimize" && (
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -624,7 +664,7 @@ E-commerce Platform Optimization
                           className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                         >
                           <Eye className="w-4 h-4" />
-                          <span>{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                          <span>{showPreview ? "Hide Preview" : "Show Preview"}</span>
                         </button>
                         <button
                           onClick={() => downloadCV(optimizedCV)}
@@ -684,7 +724,7 @@ E-commerce Platform Optimization
           </div>
         )}
 
-        {activeTab === 'templates' && (
+        {activeTab === "templates" && (
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -702,8 +742,8 @@ E-commerce Platform Optimization
                   onClick={() => setSelectedTemplate(key)}
                   className={`bg-white rounded-2xl shadow-lg border-2 transition-all cursor-pointer hover:shadow-xl ${
                     selectedTemplate === key
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? "border-blue-500 ring-2 ring-blue-200"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <div className={`h-32 ${template.color} rounded-t-2xl`}></div>
@@ -738,7 +778,7 @@ E-commerce Platform Optimization
                         className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                       >
                         <Eye className="w-4 h-4" />
-                        <span>{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                        <span>{showPreview ? "Hide Preview" : "Show Preview"}</span>
                       </button>
                       <button
                         onClick={() => downloadTemplatedCV(optimizedCV, selectedTemplate)}
